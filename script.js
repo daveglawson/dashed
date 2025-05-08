@@ -33,9 +33,23 @@ function processText() {
                 logEntry.textContent = `Sentence ${sentenceCount}: More than two em dashes found—output may be degraded.`;
                 log.appendChild(logEntry);
             }
+
             processedLine += processedSentence + ' ';
         });
-        processedLines.push(processedLine.trim());
+        processedLine = processedLine.trim();
+        // Apply quote rule once per line
+        processedLine = processedLine.replace(/("[^"]*[.!?])"(?![.!?])/g, function(match, p1) {
+            const quoteContent = p1.slice(0, -1);
+            const punctuation = p1.slice(-1);
+            return `"${quoteContent}"${punctuation}`;
+        });
+        // Apply bracket rule once per line
+        processedLine = processedLine.replace(/\(([^()]*[.!?])\)(?![.!?])/g, function(match, p1) {
+            const bracketContent = p1.slice(0, -1);
+            const punctuation = p1.slice(-1);
+            return `(${bracketContent})${punctuation}`;
+        });
+        processedLines.push(processedLine);
     });
     
     // Join lines with <br> to preserve original line breaks
