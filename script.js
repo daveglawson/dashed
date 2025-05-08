@@ -23,31 +23,26 @@ function processText() {
             const emDashCount = (sentence.match(/—/g) || []).length;
             let processedSentence = sentence;
             if (emDashCount === 1) {
-                processedSentence = sentence.replace(/—/g, ' - ');
+                processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash"> - </span>');
             } else if (emDashCount === 2) {
-                processedSentence = sentence.replace(/—/g, ', ');
+                processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash">, </span>');
             } else if (emDashCount >= 3) {
-                processedSentence = sentence.replace(/—/g, ', ');
+                processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash">, </span>');
                 const logEntry = document.createElement('div');
                 logEntry.className = 'log-entry';
                 logEntry.textContent = `Sentence ${sentenceCount}: More than two em dashes found—output may be degraded.`;
                 log.appendChild(logEntry);
             }
-
             processedLine += processedSentence + ' ';
         });
         processedLine = processedLine.trim();
-        // Apply quote rule once per line
-        processedLine = processedLine.replace(/("[^"]*[.!?])"(?![.!?])/g, function(match, p1) {
-            const quoteContent = p1.slice(0, -1);
-            const punctuation = p1.slice(-1);
-            return `"${quoteContent}"${punctuation}`;
+        // Apply quote rule once per line, highlighting moved punctuation in pastel orange
+        processedLine = processedLine.replace(/("[^"]*)([.!?])"(?![.!?])/g, function(match, p1, punc) {
+            return `"${p1}"<span class="highlight-punctmove">${punc}</span>`;
         });
-        // Apply bracket rule once per line
-        processedLine = processedLine.replace(/\(([^()]*[.!?])\)(?![.!?])/g, function(match, p1) {
-            const bracketContent = p1.slice(0, -1);
-            const punctuation = p1.slice(-1);
-            return `(${bracketContent})${punctuation}`;
+        // Apply bracket rule once per line, highlighting moved punctuation in pastel orange
+        processedLine = processedLine.replace(/\(([^()]*)([.!?])\)(?![.!?])/g, function(match, p1, punc) {
+            return `(${p1})<span class="highlight-punctmove">${punc}</span>`;
         });
         processedLines.push(processedLine);
     });

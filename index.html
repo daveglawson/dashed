@@ -71,12 +71,29 @@
             color: #333;
             margin-bottom: 20px;
         }
+        .highlight-change {
+            background-color: #fff3b0;
+            border-radius: 2px;
+            /* Optionally, add a dotted underline for extra clarity */
+            border-bottom: 1px dotted #e0b800;
+        }
+        .highlight-emdash {
+            background-color: #fff3b0;
+            border-radius: 2px;
+            border-bottom: 1px dotted #e0b800;
+        }
+        .highlight-punctmove {
+            background-color: #ffe0b3;
+            border-radius: 2px;
+            border-bottom: 1px dotted #ffb366;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="main-content">
             <h1>Em-Dash Processor</h1>
+            <p style="color: #888; font-size: 0.95em; margin-top: -10px;">Changes are highlighted for visibility, but will not be copied when you paste the output.</p>
             <textarea id="input" placeholder="Enter your text here..."></textarea>
             <button onclick="processText()">Process Text</button>
             <div id="output"></div>
