@@ -31,14 +31,25 @@ function processText() {
         }
     ];
     
+    // Curly to straight quote map
+    const curlyQuoteMap = {
+        '‘': "'", '’': "'", '“': '"', '”': '"'
+    };
+    const curlyQuoteRegex = /[‘’“”]/g;
+    
     // Split text into lines to preserve line breaks
     const lines = input.split(/\r?\n/);
     let processedLines = [];
     let sentenceCount = 0;
     
     lines.forEach((line, lineIdx) => {
+        // For display, replace curly quotes with highlighted straight quotes
+        let displayLine = line.replace(curlyQuoteRegex, match => `<span class="highlight-straightquote">${curlyQuoteMap[match]}</span>`);
+        // For processing/copy, replace curly quotes with straight quotes
+        let plainLine = line.replace(curlyQuoteRegex, match => curlyQuoteMap[match]);
+
         // Split each line into sentences
-        const sentences = line.split(/(?<=[.!?])\s+/);
+        const sentences = plainLine.split(/(?<=[.!?])\s+/);
         let processedLine = '';
         sentences.forEach(sentence => {
             if (!sentence.trim()) return;
@@ -79,7 +90,32 @@ function processText() {
                 return `<span class="highlight-warning">${match}</span>`;
             });
         });
-        processedLines.push(processedLine);
+        // Now, merge the highlighted straight quotes from displayLine into processedLine
+        // We'll do this by replacing straight quotes in processedLine with highlighted ones from displayLine, but only at positions where displayLine has a highlight span
+        let mergedLine = '';
+        let i = 0, j = 0;
+        while (i < processedLine.length && j < displayLine.length) {
+            if (displayLine.slice(j, j + 31) === '<span class="highlight-straightquote">') {
+                // Find end of span
+                let end = displayLine.indexOf('</span>', j);
+                if (end !== -1) {
+                    let span = displayLine.slice(j, end + 7);
+                    // Only replace if processedLine at i is a straight quote
+                    if (processedLine[i] === '"' || processedLine[i] === "'") {
+                        mergedLine += span;
+                        i += 1;
+                        j = end + 7;
+                        continue;
+                    }
+                }
+            }
+            mergedLine += processedLine[i];
+            i += 1;
+            j += 1;
+        }
+        // Append any remaining part of processedLine
+        if (i < processedLine.length) mergedLine += processedLine.slice(i);
+        processedLines.push(mergedLine);
     });
     
     // Join lines with <br> to preserve original line breaks
