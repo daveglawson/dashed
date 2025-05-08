@@ -7,12 +7,36 @@ function processText() {
     output.textContent = '';
     log.innerHTML = '';
     
+    // Warning phrase definitions
+    const warningRules = [
+        {
+            name: 'Sentence Initial Conjugation',
+            regex: /(?<=^|[.!?]\s)(And|But|So|Yet|However|Therefore|Consequently)\b/g,
+            message: phrase => `Sentence initial conjunction detected: "${phrase}".`
+        },
+        {
+            name: 'Summary Cliché',
+            regex: /(In conclusion|To summarize|Overall|In summary)\b/gi,
+            message: phrase => `Summary cliché detected: "${phrase}".`
+        },
+        {
+            name: 'Hedging/Politeness',
+            regex: /(Just|Simply|Perhaps|I believe|I think|It seems|If possible|At your earliest convenience)\b/gi,
+            message: phrase => `Hedging or politeness phrase detected: "${phrase}".`
+        },
+        {
+            name: 'Professional Overkill',
+            regex: /(Hope this helps|Please let me know if you have any questions|Feel free to reach out|finds you well|hope)/gi,
+            message: phrase => `Professional overkill phrase detected: "${phrase}".`
+        }
+    ];
+    
     // Split text into lines to preserve line breaks
     const lines = input.split(/\r?\n/);
     let processedLines = [];
     let sentenceCount = 0;
     
-    lines.forEach(line => {
+    lines.forEach((line, lineIdx) => {
         // Split each line into sentences
         const sentences = line.split(/(?<=[.!?])\s+/);
         let processedLine = '';
@@ -43,6 +67,17 @@ function processText() {
         // Apply bracket rule once per line, highlighting moved punctuation in pastel orange
         processedLine = processedLine.replace(/\(([^()]*)([.!?])\)(?![.!?])/g, function(match, p1, punc) {
             return `(${p1})<span class="highlight-punctmove">${punc}</span>`;
+        });
+        // Apply warning rules (highlight and log, but do not change text)
+        warningRules.forEach(rule => {
+            processedLine = processedLine.replace(rule.regex, function(match) {
+                // Log only once per phrase per line
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.textContent = `Line ${lineIdx + 1}: ${rule.message(match)}`;
+                log.appendChild(logEntry);
+                return `<span class="highlight-warning">${match}</span>`;
+            });
         });
         processedLines.push(processedLine);
     });
