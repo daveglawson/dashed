@@ -2,10 +2,14 @@ function processText() {
     const input = document.getElementById('input').value;
     const output = document.getElementById('output');
     const log = document.getElementById('log');
+    const copyButton = document.getElementById('copyButton');
     
     // Clear previous output and log
     output.textContent = '';
     log.innerHTML = '';
+    
+    // Disable copy button initially
+    copyButton.disabled = true;
     
     // Warning phrase definitions
     const warningRules = [
@@ -141,4 +145,40 @@ function processText() {
     
     // Join lines with <br> to preserve original line breaks
     output.innerHTML = processedLines.join('<br>');
+    
+    // Enable copy button if there's output
+    if (processedLines.length > 0) {
+        copyButton.disabled = false;
+    }
+}
+
+function copyOutput() {
+    // Create a temporary element to hold the plain text version of the output
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = document.getElementById('output').innerHTML;
+    
+    // Replace <br> tags with newlines
+    let plainText = tempElement.innerHTML.replace(/<br>/g, '\n');
+    
+    // Remove all HTML tags to get plain text
+    plainText = plainText.replace(/<[^>]*>/g, '');
+    
+    // Use the clipboard API to copy the text
+    navigator.clipboard.writeText(plainText).then(
+        function() {
+            // Success feedback - temporarily change button text
+            const copyButton = document.getElementById('copyButton');
+            const originalHTML = copyButton.innerHTML;
+            copyButton.innerHTML = '<span class="material-icons">check</span>Copied!';
+            
+            // Reset button after 2 seconds
+            setTimeout(function() {
+                copyButton.innerHTML = originalHTML;
+            }, 2000);
+        },
+        function() {
+            // Error feedback
+            alert('Failed to copy text. Please try again.');
+        }
+    );
 } 

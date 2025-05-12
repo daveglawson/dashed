@@ -20,7 +20,13 @@
                 <span class="material-icons">auto_fix_high</span>
                 Process Text
             </button>
-            <div id="output" class="output-container"></div>
+            <div class="output-section">
+                <div id="output" class="output-container"></div>
+                <button id="copyButton" class="material-button copy-button" onclick="copyOutput()" disabled>
+                    <span class="material-icons">content_copy</span>
+                    Copy Output
+                </button>
+            </div>
         </div>
         <div class="sidebar">
             <h2>Processing Log</h2>
