@@ -4,113 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Em-Dash Processor</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 20px;
-        }
-        .main-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .sidebar {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        textarea {
-            width: 100%;
-            min-height: 300px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            resize: vertical;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #output {
-            margin-top: 20px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-            min-height: 100px;
-        }
-        .log-entry {
-            padding: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid #ffc107;
-            background-color: #fff8e1;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .highlight-change {
-            background-color: #fff3b0;
-            border-radius: 2px;
-            /* Optionally, add a dotted underline for extra clarity */
-            border-bottom: 1px dotted #e0b800;
-        }
-        .highlight-emdash {
-            background-color: #fff3b0;
-            border-radius: 2px;
-            border-bottom: 1px dotted #e0b800;
-        }
-        .highlight-punctmove {
-            background-color: #ffe0b3;
-            border-radius: 2px;
-            border-bottom: 1px dotted #ffb366;
-        }
-        .highlight-warning {
-            background-color: #ffd6d6;
-            border-radius: 2px;
-            border-bottom: 1px dotted #e57373;
-        }
-        .highlight-straightquote {
-            background-color: #d6eaff;
-            border-radius: 2px;
-            border-bottom: 1px dotted #5bb3e6;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div class="main-content">
             <h1>Em-Dash Processor</h1>
-            <p style="color: #888; font-size: 0.95em; margin-top: -10px;">Changes are highlighted for visibility, but will not be copied when you paste the output.</p>
-            <textarea id="input" placeholder="Enter your text here..."></textarea>
-            <button onclick="processText()">Process Text</button>
-            <div id="output"></div>
+            <p class="subtitle">Changes are highlighted for visibility, but will not be copied when you paste the output.</p>
+            <div class="text-field">
+                <textarea id="input" placeholder="Enter your text here..."></textarea>
+            </div>
+            <button class="material-button" onclick="processText()">
+                <span class="material-icons">auto_fix_high</span>
+                Process Text
+            </button>
+            <div id="output" class="output-container"></div>
         </div>
         <div class="sidebar">
             <h2>Processing Log</h2>
-            <div id="log"></div>
+            <div id="log" class="log-container"></div>
         </div>
     </div>
     <script src="script.js"></script>

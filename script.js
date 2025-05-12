@@ -33,9 +33,12 @@ function processText() {
     
     // Curly to straight quote map
     const curlyQuoteMap = {
-        '‘': "'", '’': "'", '“': '"', '”': '"'
+        '“': '"',
+        '”': '"',
+        '‘': "'",
+        '’': "'"
     };
-    const curlyQuoteRegex = /[‘’“”]/g;
+    const curlyQuoteRegex = /[''""]/g;
     
     // Split text into lines to preserve line breaks
     const lines = input.split(/\r?\n/);
@@ -64,7 +67,7 @@ function processText() {
             } else if (emDashCount >= 3) {
                 processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash">, </span>');
                 const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
+                logEntry.className = 'log-entry emdash';
                 logEntry.textContent = `Sentence ${sentenceCount}: More than two em dashes found—output may be degraded.`;
                 log.appendChild(logEntry);
             }
@@ -73,10 +76,18 @@ function processText() {
         processedLine = processedLine.trim();
         // Apply quote rule once per line, highlighting moved punctuation in pastel orange
         processedLine = processedLine.replace(/("[^"]*)([.!?])"(?![.!?])/g, function(match, p1, punc) {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry punctuation';
+            logEntry.textContent = `Line ${lineIdx + 1}: Moved punctuation outside quotation marks.`;
+            log.appendChild(logEntry);
             return `"${p1}"<span class="highlight-punctmove">${punc}</span>`;
         });
         // Apply bracket rule once per line, highlighting moved punctuation in pastel orange
         processedLine = processedLine.replace(/\(([^()]*)([.!?])\)(?![.!?])/g, function(match, p1, punc) {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry punctuation';
+            logEntry.textContent = `Line ${lineIdx + 1}: Moved punctuation outside parentheses.`;
+            log.appendChild(logEntry);
             return `(${p1})<span class="highlight-punctmove">${punc}</span>`;
         });
         // Apply warning rules (highlight and log, but do not change text)
@@ -84,12 +95,22 @@ function processText() {
             processedLine = processedLine.replace(rule.regex, function(match) {
                 // Log only once per phrase per line
                 const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
+                logEntry.className = 'log-entry warning';
                 logEntry.textContent = `Line ${lineIdx + 1}: ${rule.message(match)}`;
                 log.appendChild(logEntry);
                 return `<span class="highlight-warning">${match}</span>`;
             });
         });
+        
+        // Check for straight quotes and log them
+        const straightQuotes = plainLine.match(/["']/g);
+        if (straightQuotes && straightQuotes.length > 0) {
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry quote';
+            logEntry.textContent = `Line ${lineIdx + 1}: Straight quotes converted to typographic quotes.`;
+            log.appendChild(logEntry);
+        }
+        
         // Now, merge the highlighted straight quotes from displayLine into processedLine
         // We'll do this by replacing straight quotes in processedLine with highlighted ones from displayLine, but only at positions where displayLine has a highlight span
         let mergedLine = '';
