@@ -35,18 +35,19 @@ function processText() {
         }
     ];
     
-    // Curly to straight quote map
+    // Curly to straight quote map - using escaped unicode to avoid syntax issues
     const curlyQuoteMap = {
-        '“': '"',
-        '”': '"',
-        '‘': "'",
-        '’': "'"
+        '\u201C': '"', // Left double quote
+        '\u201D': '"', // Right double quote
+        '\u2018': "'", // Left single quote
+        '\u2019': "'"  // Right single quote
     };
-    const curlyQuoteRegex = /[''""]/g;
+    const curlyQuoteRegex = /[\u2018\u2019\u201C\u201D]/g;
     
     // Split text into lines to preserve line breaks
     const lines = input.split(/\r?\n/);
     let processedLines = [];
+    let plainTextLines = [];
     let sentenceCount = 0;
     
     lines.forEach((line, lineIdx) => {
@@ -54,6 +55,9 @@ function processText() {
         let displayLine = line.replace(curlyQuoteRegex, match => `<span class="highlight-straightquote">${curlyQuoteMap[match]}</span>`);
         // For processing/copy, replace curly quotes with straight quotes
         let plainLine = line.replace(curlyQuoteRegex, match => curlyQuoteMap[match]);
+        
+        // Store a clean version for copying
+        let plainTextLine = plainLine;
 
         // Split each line into sentences
         const sentences = plainLine.split(/(?<=[.!?])\s+/);
@@ -62,38 +66,52 @@ function processText() {
             if (!sentence.trim()) return;
             sentenceCount++;
             // Count em-dashes in the sentence
-            const emDashCount = (sentence.match(/—/g) || []).length;
+            const emDashCount = (sentence.match(/\u2014/g) || []).length;
             let processedSentence = sentence;
             if (emDashCount === 1) {
-                processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash"> - </span>');
+                processedSentence = sentence.replace(/\u2014/g, '<span class="highlight-emdash"> - </span>');
+                plainTextLine = plainTextLine.replace(/\u2014/g, ' - ');
             } else if (emDashCount === 2) {
-                processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash">, </span>');
+                processedSentence = sentence.replace(/\u2014/g, '<span class="highlight-emdash">, </span>');
+                plainTextLine = plainTextLine.replace(/\u2014/g, ', ');
             } else if (emDashCount >= 3) {
-                processedSentence = sentence.replace(/—/g, '<span class="highlight-emdash">, </span>');
+                processedSentence = sentence.replace(/\u2014/g, '<span class="highlight-emdash">, </span>');
+                plainTextLine = plainTextLine.replace(/\u2014/g, ', ');
                 const logEntry = document.createElement('div');
                 logEntry.className = 'log-entry emdash';
-                logEntry.textContent = `Sentence ${sentenceCount}: More than two em dashes found—output may be degraded.`;
+                logEntry.textContent = `Sentence ${sentenceCount}: More than two em dashes found\u2014output may be degraded.`;
                 log.appendChild(logEntry);
             }
             processedLine += processedSentence + ' ';
         });
         processedLine = processedLine.trim();
+        
         // Apply quote rule once per line, highlighting moved punctuation in pastel orange
         processedLine = processedLine.replace(/("[^"]*)([.!?])"(?![.!?])/g, function(match, p1, punc) {
             const logEntry = document.createElement('div');
             logEntry.className = 'log-entry punctuation';
             logEntry.textContent = `Line ${lineIdx + 1}: Moved punctuation outside quotation marks.`;
             log.appendChild(logEntry);
+            
+            // Also update the plain text version
+            plainTextLine = plainTextLine.replace(/("[^"]*)([.!?])"(?![.!?])/g, `"$1"$2`);
+            
             return `"${p1}"<span class="highlight-punctmove">${punc}</span>`;
         });
+        
         // Apply bracket rule once per line, highlighting moved punctuation in pastel orange
         processedLine = processedLine.replace(/\(([^()]*)([.!?])\)(?![.!?])/g, function(match, p1, punc) {
             const logEntry = document.createElement('div');
             logEntry.className = 'log-entry punctuation';
             logEntry.textContent = `Line ${lineIdx + 1}: Moved punctuation outside parentheses.`;
             log.appendChild(logEntry);
+            
+            // Also update the plain text version
+            plainTextLine = plainTextLine.replace(/\(([^()]*)([.!?])\)(?![.!?])/g, `($1)$2`);
+            
             return `(${p1})<span class="highlight-punctmove">${punc}</span>`;
         });
+        
         // Apply warning rules (highlight and log, but do not change text)
         warningRules.forEach(rule => {
             processedLine = processedLine.replace(rule.regex, function(match) {
@@ -106,17 +124,7 @@ function processText() {
             });
         });
         
-        // Check for straight quotes and log them
-        const straightQuotes = plainLine.match(/["']/g);
-        if (straightQuotes && straightQuotes.length > 0) {
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry quote';
-            logEntry.textContent = `Line ${lineIdx + 1}: Straight quotes converted to typographic quotes.`;
-            log.appendChild(logEntry);
-        }
-        
         // Now, merge the highlighted straight quotes from displayLine into processedLine
-        // We'll do this by replacing straight quotes in processedLine with highlighted ones from displayLine, but only at positions where displayLine has a highlight span
         let mergedLine = '';
         let i = 0, j = 0;
         while (i < processedLine.length && j < displayLine.length) {
@@ -141,10 +149,14 @@ function processText() {
         // Append any remaining part of processedLine
         if (i < processedLine.length) mergedLine += processedLine.slice(i);
         processedLines.push(mergedLine);
+        plainTextLines.push(plainTextLine);
     });
     
     // Join lines with <br> to preserve original line breaks
     output.innerHTML = processedLines.join('<br>');
+    
+    // Store the plain text version for copying
+    output.setAttribute('data-plain-text', plainTextLines.join('\n'));
     
     // Enable copy button if there's output
     if (processedLines.length > 0) {
@@ -153,15 +165,8 @@ function processText() {
 }
 
 function copyOutput() {
-    // Create a temporary element to hold the plain text version of the output
-    const tempElement = document.createElement('div');
-    tempElement.innerHTML = document.getElementById('output').innerHTML;
-    
-    // Replace <br> tags with newlines
-    let plainText = tempElement.innerHTML.replace(/<br>/g, '\n');
-    
-    // Remove all HTML tags to get plain text
-    plainText = plainText.replace(/<[^>]*>/g, '');
+    // Get the plain text version stored in the data attribute
+    const plainText = document.getElementById('output').getAttribute('data-plain-text');
     
     // Use the clipboard API to copy the text
     navigator.clipboard.writeText(plainText).then(
